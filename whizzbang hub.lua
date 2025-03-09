@@ -1,7 +1,7 @@
 local DiscordLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")()
 
 local win = DiscordLib:Window("whizzbang")
-local serv = win:Server("Main", "")
+local serv = win:Server("Preview", "")
 local tgls = serv:Channel("Toggles")
 
 
@@ -9,9 +9,6 @@ local npcConnections = {}
 local npcHighlights = {}
 local crosshairGui = nil
 local crosshairConnection = nil
-local woundedConnections = {}
-local woundedGui = nil
-local woundedHighlights = {}
 
 tgls:Toggle("Highlight NPCs", false, function(bool)
     if bool then
@@ -102,96 +99,5 @@ tgls:Toggle("Gun Crosshair", false, function(bool)
             crosshairGui:Destroy()
             crosshairGui = nil
         end
-    end
-end)
-
-tgls:Toggle("Wounded ESP", false, function(bool)
-    if bool then
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-
-        woundedGui = Instance.new("ScreenGui")
-        woundedGui.Name = "HealthHighlightGui"
-        woundedGui.ResetOnSpawn = false
-        woundedGui.Parent = player.PlayerGui
-
-        local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 150, 0, 50)
-        frame.Position = UDim2.new(1, -170, 0, 20)
-        frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        frame.BorderSizePixel = 2
-        frame.Active = true
-        frame.Draggable = true
-        frame.Parent = woundedGui
-
-        local refreshButton = Instance.new("TextButton")
-        refreshButton.Size = UDim2.new(0.8, 0, 0.6, 0)
-        refreshButton.Position = UDim2.new(0.1, 0, 0.2, 0)
-        refreshButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        refreshButton.Text = "Refresh"
-        refreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        refreshButton.Parent = frame
-
-        local function setupCharacter(char)
-            local humanoid = char:WaitForChild("Humanoid")
-            local highlight = Instance.new("Highlight")
-            highlight.Parent = char
-            highlight.Enabled = false
-            table.insert(woundedHighlights, highlight)
-            
-            local connection = humanoid.HealthChanged:Connect(function(health)
-                if health < 100 then
-                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-                    highlight.Enabled = true
-                else
-                    highlight.Enabled = false
-                end
-            end)
-            table.insert(woundedConnections, connection)
-        end
-
-        local playerAddedConnection = Players.PlayerAdded:Connect(function(newPlayer)
-            newPlayer.CharacterAdded:Connect(setupCharacter)
-        end)
-        table.insert(woundedConnections, playerAddedConnection)
-
-        local characterAddedConnection = player.CharacterAdded:Connect(setupCharacter)
-        table.insert(woundedConnections, characterAddedConnection)
-
-        local refreshConnection = refreshButton.MouseButton1Click:Connect(function()
-            for _, plr in pairs(Players:GetPlayers()) do
-                if plr.Character then
-                    local highlight = plr.Character:FindFirstChild("Highlight")
-                    if highlight then
-                        highlight:Destroy()
-                    end
-                    setupCharacter(plr.Character)
-                end
-            end
-        end)
-        table.insert(woundedConnections, refreshConnection)
-
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr.Character then
-                setupCharacter(plr.Character)
-            end
-            local charAddedConn = plr.CharacterAdded:Connect(setupCharacter)
-            table.insert(woundedConnections, charAddedConn)
-        end
-    else
-        
-        for _, connection in pairs(woundedConnections) do
-            connection:Disconnect()
-        end
-        for _, highlight in pairs(woundedHighlights) do
-            highlight:Destroy()
-        end
-        if woundedGui then
-            woundedGui:Destroy()
-        end
-        table.clear(woundedConnections)
-        table.clear(woundedHighlights)
-        woundedGui = nil
     end
 end)
